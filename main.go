@@ -32,18 +32,26 @@ func main() {
 
 	buf := make([]byte, 128, 128)
 
+	log.Println("started")
+
+	count := int64(0)
+
 	for {
-		if _, err = rand.Read(buf); err != nil {
-			return
+		count++
+		for i := 0; i < 100; i++ {
+			if _, err = rand.Read(buf); err != nil {
+				return
+			}
+			key := "r-s-t-" + hex.EncodeToString(buf[0:16])
+			val := hex.EncodeToString(buf)
+			if err = r.Set(key, val, time.Second*5).Err(); err != nil {
+				return
+			}
+			if err = r.Del(key).Err(); err != nil {
+				return
+			}
 		}
-		key := "r-s-t-" + hex.EncodeToString(buf[0:16])
-		val := hex.EncodeToString(buf)
-		if err = r.Set(key, val, time.Second*5).Err(); err != nil {
-			return
-		}
-		if err = r.Del(key).Err(); err != nil {
-			return
-		}
-		time.Sleep(time.Millisecond * 200)
+		log.Printf("round: %012d", count)
+		time.Sleep(time.Second)
 	}
 }
